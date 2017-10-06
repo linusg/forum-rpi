@@ -37,7 +37,7 @@ class ConversationDownloader:
         soup = BeautifulSoup(self.get_page(self.base_url + 'conversation-list'), 'html5lib')
         pagination = soup.find('nav', {'class': 'pagination'})
         pages = int(pagination.get('data-pages'))
-        return [BASE_URL + 'conversation-list/?filter=&pageNo={0}&sortField=lastPostTime&sortOrder=DESC'.format(n+1) for n in range(pages)]
+        return [self.base_url + 'conversation-list/?filter=&pageNo={0}&sortField=lastPostTime&sortOrder=DESC'.format(n+1) for n in range(pages)]
 
     def get_conversation_urls(self, page_url):
         urls = []
