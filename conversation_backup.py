@@ -1,32 +1,17 @@
 import os
-import sys
-import getpass
 
 import requests
 from bs4 import BeautifulSoup
 
-BASE_URL = 'https://forum-raspberrypi.de/'
-
-
-def check_directory(directory):
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
-        return False
-    return True
-
-
-def get_token(line):
-    return line.strip().replace('var SECURITY_TOKEN = ', '').replace(';', '').replace("'", '')
+from util import BASE_URL, check_directory, login, get_input
 
 
 class ConversationDownloader:
     def __init__(self, base_url, target_dir, username, password):
         self.base_url = base_url
         self.target_dir = target_dir
-        self.username = username
-        self.password = password
 
-        self.session = requests.Session()
+        self.session = login(username, password)
 
     def get_page(self, url):
         response = self.session.get(url)
@@ -37,7 +22,6 @@ class ConversationDownloader:
             print("Created directory '{0}'".format(self.target_dir))
 
         conversation_urls = []
-        self.login()
 
         for number, url in enumerate(self.get_page_urls()):
             print('Getting URLs from page {0}...'.format(number+1))
@@ -48,18 +32,6 @@ class ConversationDownloader:
 
         self.session.close()
         print('Done!')
-
-    def login(self):
-        soup = BeautifulSoup(self.get_page(self.base_url), 'html5lib')
-        java_script = str(soup.find('script'))
-        token = [get_token(line) for line in java_script.split('\n') if 'var SECURITY_TOKEN' in line]
-        data = {
-            'username': self.username,
-            'password': self.password,
-            'useCookies': 1,
-            't': token
-        }
-        self.session.post(BASE_URL + 'login', data=data)
 
     def get_page_urls(self):
         soup = BeautifulSoup(self.get_page(self.base_url + 'conversation-list'), 'html5lib')
@@ -86,30 +58,6 @@ class ConversationDownloader:
         with open(os.path.join(self.target_dir, '{0}.html'.format(identifier)), 'w') as f:
             f.write(html)
 
-
-def get_input(prompt, default=None, hidden=False):
-    if default is not None:
-        prompt += ' [{0}]'.format(default)
-    prompt += ': '
-
-    try:
-        if hidden:
-            value = getpass.getpass(prompt)
-        else:
-            try:
-                # Python 2
-                value = raw_input(prompt)
-            except NameError:
-                # Python 3
-                value = input(prompt)
-    except KeyboardInterrupt:
-        print('\nInterrupted!')
-        sys.exit()
-
-    if default is not None and not value:
-        return default
-    else:
-        return value
 
 def main():
     username = get_input('Username')
