@@ -1,4 +1,8 @@
 import os
+import sys
+
+if sys.version_info[0] < 3:
+    import codecs
 
 import requests
 from bs4 import BeautifulSoup
@@ -55,8 +59,12 @@ class ConversationDownloader:
         identifier = conversation_url.replace(self.base_url, '').replace('conversation/', '').replace('/', '')
         print('Downloading {0}'.format(identifier))
         html = self.get_page(conversation_url)
-        with open(os.path.join(self.target_dir, '{0}.html'.format(identifier)), 'w') as f:
-            f.write(html)
+        if sys.version_info[0] < 3:
+            with codecs.open(os.path.join(self.target_dir, '{0}.html'.format(identifier)), encoding='utf-8', mode='w') as f:
+                f.write(unicode(html))
+        else:
+            with open(os.path.join(self.target_dir, '{0}.html'.format(identifier)), 'w') as f:
+                f.write(html)
 
 
 def main():
